@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ t("文件管理") }} · {{ t("我的心得") }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap gap-2 justify-content-between align-items-end">
+    <div>
+      <h3 class="mb-1">{{ t("文件管理") }}</h3>
+      <div class="text-muted small">{{ t("目录：") }}{{ base_dir }}</div>
+    </div>
+
+    <form class="d-flex gap-2" method="get" action="{{ url_for('files') }}">
+      <input class="form-control form-control-sm" name="q" value="{{ q }}" placeholder="{{ t('搜索（文件名/路径）') }}" style="width: 260px;">
+      <button class="btn btn-sm btn-outline-primary" type="submit">{{ t("搜索") }}</button>
+    </form>
+  </div>
+
+  <div class="alert alert-info mt-3">
+    {{ t("仅支持编辑") }} <code>.json</code> / <code>.log</code> / <code>.txt</code> {{ t("文件。") }}
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 60%">{{ t("路径") }}</th>
+              <th>{{ t("大小") }}</th>
+              <th>{{ t("修改时间") }}</th>
+              <th style="width: 220px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in files %}
+              <tr>
+                <td><code>{{ f.path }}</code></td>
+                <td class="text-muted">{{ f.size_h }}</td>
+                <td class="text-muted">{{ f.mtime }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('file_download') }}?path={{ f.path | urlencode }}">{{ t("下载") }}</a>
+                  <a class="btn btn-sm btn-primary" href="{{ url_for('file_edit') }}?path={{ f.path | urlencode }}">{{ t("编辑") }}</a>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="4" class="text-center text-muted py-4">{{ t("没有匹配的文件") }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

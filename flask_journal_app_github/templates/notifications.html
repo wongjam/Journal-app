@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ t("新评论") }} · {{ t("我的心得") }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-xl-9">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">{{ t("新评论") }}</h5>
+          <form method="post" action="{{ url_for('notifications_clear') }}">
+            <button class="btn btn-sm btn-outline-danger" type="submit">{{ t("一键清除") }}</button>
+          </form>
+          <span class="text-muted small">{{ items|length }} {{ t('条未读') }}</span>
+        </div>
+        {% if items|length == 0 %}
+          <div class="empty-state mt-3">
+            <div class="display-6">✅</div>
+            <div class="mt-2">{{ t("没有未读评论。") }}</div>
+          </div>
+        {% else %}
+          <div class="list-group mt-3">
+            {% for it in items %}
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start"
+                 href="{{ url_for('open_comment', comment_id=it.comment_id) }}">
+                <div class="me-2">
+                  <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <span class="badge text-bg-dark">{{ it.model }}</span>
+                    <span class="fw-semibold">{{ it.post_title }}</span>
+                  </div>
+                  <div class="text-muted small mt-1">{{ t("评论时间：") }}{{ it.created_at[:19].replace("T"," ") }}</div>
+                </div>
+                <div class="text-muted small">{{ t("打开") }}</div>
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

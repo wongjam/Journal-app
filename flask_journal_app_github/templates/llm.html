@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}{{ t("LLM 评论设置") }} · {{ t("我的心得") }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">{{ t("Ollama / LLM 配置") }}</h5>
+          <div class="ms-auto d-flex align-items-center gap-2">
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" id="autoEnabledSwitch" {% if cfg.auto_enabled %}checked{% endif %}>
+              <label class="form-check-label" for="autoEnabledSwitch">{{ t("自动评论") }}</label>
+            </div>
+            <span id="autoEnabledBadge" class="badge {% if cfg.auto_enabled %}text-bg-success{% else %}text-bg-secondary{% endif %}">{% if cfg.auto_enabled %}{{ t("开启") }}{% else %}{{ t("关闭") }}{% endif %}</span>
+          </div>
+          <form method="post" action="{{ url_for('llm_test_connection') }}">
+            <button class="btn btn-sm btn-outline-secondary" type="submit">{{ t("测试连接") }}</button>
+          </form>
+        </div>
+        <div class="alert alert-light border mt-3 mb-0">
+          {{ t("当前自动评论状态：") }} <span id="autoEnabledBadge2" class="badge {% if cfg.auto_enabled %}text-bg-success{% else %}text-bg-secondary{% endif %}">{% if cfg.auto_enabled %}{{ t("开启") }}{% else %}{{ t("关闭") }}{% endif %}</span>
+          <div class="text-muted small mt-1">{{ t("关闭时，后台不会定时生成；但“立即评论”仍然可用。") }}</div>
+        </div>
+
+        <script>
+          (function(){
+            const sw = document.getElementById('autoEnabledSwitch');
+            const b1 = document.getElementById('autoEnabledBadge');
+            const b2 = document.getElementById('autoEnabledBadge2');
+
+            function setBadge(on){
+              const text = on ? '{{ t("开启") }}' : '{{ t("关闭") }}';
+              [b1,b2].forEach(b => {
+                if (!b) return;
+                b.textContent = text;
+                b.classList.remove('text-bg-success','text-bg-secondary');
+                b.classList.add(on ? 'text-bg-success' : 'text-bg-secondary');
+              });
+            }
+
+            if (sw){
+              sw.addEventListener('change', async function(){
+                const enabled = !!sw.checked;
+                // optimistic UI update
+                setBadge(enabled);
+                try {
+                  const resp = await fetch('{{ url_for('api_llm_set_auto_enabled') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled })
+                  });
+                  const data = await resp.json();
+                  if (!data || !data.ok){ throw new Error('bad response'); }
+                  setBadge(!!data.auto_enabled);
+                  sw.checked = !!data.auto_enabled;
+                } catch (e){
+                  // revert if failed
+                  sw.checked = !enabled;
+                  setBadge(!enabled);
+                  alert('{{ t('切换失败：请检查服务是否正常运行。') }}');
+                }
+              });
+            }
+          })();
+        </script>
+
+        {% if error %}
+          <div class="alert alert-warning mt-3 mb-0">{{ error }}</div>
+        {% endif %}
+
+        <form class="mt-3" method="post" action="{{ url_for('llm_save') }}">
+          <div class="row g-2 mt-2">
+            <div class="col-8">
+              <label class="form-label">{{ t("服务器") }}</label>
+              <input class="form-control" name="server" value="{{ cfg.server }}" placeholder="127.0.0.1">
+            </div>
+            <div class="col-4">
+              <label class="form-label">{{ t("端口") }}</label>
+              <input class="form-control" name="port" value="{{ cfg.port }}" placeholder="11434">
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label">{{ t("模型限制（可多选；不选=允许全部）") }}</label>
+            <select class="form-select" name="allowed_models" multiple size="6">
+              {% for m in models %}
+                <option value="{{ m }}" {% if m in cfg.allowed_models %}selected{% endif %}>{{ m }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">{{ t("如果这里空白，说明当前未能拉取模型列表（可先点“测试连接”）。") }}</div>
+          </div>
+
+          <div class="row g-2 mt-3">
+            <div class="col-md-6">
+              <label class="form-label">{{ t("默认频率（分钟）") }}</label>
+              <input class="form-control" name="default_interval_minutes" value="{{ cfg.default_interval_minutes }}">
+              <div class="form-text">{{ t("默认每 120 分钟（=2小时）") }}</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ t("每篇默认最多评论次数") }}</label>
+              <input class="form-control" name="max_comments_per_post_default" value="{{ cfg.max_comments_per_post_default }}">
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label">{{ t("挑选文章策略") }}</label>
+            <select class="form-select" name="random_pick_mode">
+              <option value="random_uncommented_first" {% if cfg.random_pick_mode == "random_uncommented_first" %}selected{% endif %}>{{ t("优先没被评论过的文章，其次随机") }}</option>
+              <option value="latest" {% if cfg.random_pick_mode == "latest" %}selected{% endif %}>{{ t("优先最新文章") }}</option>
+            </select>
+          </div>
+
+          <hr class="my-4">
+
+          <h6 class="mb-2">{{ t("模型细化设置（可选）") }}</h6>
+          <div class="text-muted small mb-2">{{ t("你可以针对每个模型设置：间隔分钟数 / 每篇最多评论次数。") }}</div>
+
+          <div class="vstack gap-2">
+            {% for m in models %}
+              <div class="p-2 border rounded-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <div class="fw-semibold">{{ m }}</div>
+                  <div class="d-flex gap-2">
+                    <div>
+                      <div class="text-muted small">{{ t("间隔(分钟)") }}</div>
+                      <input class="form-control form-control-sm" style="width: 120px;"
+                        name="interval__{{ m }}" value="{{ cfg.interval_minutes_by_model.get(m, '') }}" placeholder="{{ t('例如 120') }}">
+                    </div>
+                    <div>
+                      <div class="text-muted small">{{ t("每篇上限") }}</div>
+                      <input class="form-control form-control-sm" style="width: 120px;"
+                        name="max__{{ m }}" value="{{ cfg.max_comments_per_post_by_model.get(m, '') }}" placeholder="{{ t('例如 2') }}">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <hr class="my-4">
+
+          <h6 class="mb-2">{{ t("提示词管理") }}</h6>
+          <div class="text-muted small mb-2">{{ t("为了简单好维护，这里用“JSON 数组”编辑提示词预设（每个预设包含 id/name/system/user_prefix）。") }}</div>
+
+          <div class="mb-2">
+            <label class="form-label">{{ t("当前启用的预设 ID（可多个，用英文逗号分隔；将随机选择）") }}</label>
+            <input class="form-control" name="active_prompt_preset_id" value="{{ cfg.active_prompt_preset_id }}">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ t("提示词预设（JSON 数组）") }}</label>
+            <textarea class="form-control font-mono" name="prompt_presets_json" rows="10"
+              placeholder='[{"id":"x","name":"y","system":"...","user_prefix":"..."}]'>{{ prompt_presets_text }}</textarea>
+          </div>
+
+          <div class="d-grid">
+            <button class="btn btn-primary" type="submit">{{ t("保存配置") }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">{{ t("立即评论") }}</h5>
+        <div class="text-muted small">{{ t("立刻挑一篇可评论的笔记，生成 1 条评论（不会超过“每篇上限”）。") }}</div>
+
+        <form class="mt-3 js-llm-run" method="post" action="{{ url_for('llm_run_now_fallback') }}" data-endpoint="{{ url_for('api_llm_run_now') }}">
+          <label class="form-label">{{ t("选择模型") }}</label>
+          <select class="form-select" name="model" required>
+            <option value="" selected disabled>{{ t("请选择") }}</option>
+            <option value="random">{{ t("🎲 随机模型") }}</option>
+            {% for m in models %}
+              <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+          </select>
+          <div class="d-grid mt-3">
+            <button class="btn btn-success" type="button" data-action="run">{{ t("立即评论（生成一条）") }}</button>
+          </div>
+        </form>
+
+        <hr class="my-4">
+
+        <div class="alert alert-info mb-0">
+          <div class="fw-semibold mb-1">{{ t("保存位置") }}</div>
+          <ul class="mb-0">
+            <li>{{ t("LLM 设置：") }}<code>data/llm_config.json</code></li>
+            <li>{{ t("评论内容：") }}<code>data/comments.json</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

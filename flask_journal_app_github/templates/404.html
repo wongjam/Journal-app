@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}404 · {{ t("我的心得") }}{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <div class="display-1">404</div>
+  <div class="lead">{{ t("页面不存在") }}</div>
+  <a class="btn btn-primary mt-3" href="{{ url_for('index') }}">{{ t("回到首页") }}</a>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "enabled": true,
+  "server": "127.0.0.1",
+  "port": 11434,
+  "allowed_models": [],
+  "default_interval_minutes": 120,
+  "interval_minutes_by_model": {},
+  "max_comments_per_post_by_model": {},
+  "max_comments_per_post_default": 2,
+  "timeout_sec": 300,
+  "random_pick_mode": "random_uncommented_first",
+  "prompt_presets": [
+    {
+      "id": "friend_reflective",
+      "name": "朋友（分析+建议）",
+      "system": "你是一个成熟、真诚、重视共同利益的朋友。你的任务是帮助我更清晰地理解自己的想法，并给出可执行的建议。避免空洞鼓励，尽量具体。",
+      "user_prefix": "请阅读我的笔记，然后以朋友的口语语气给我的笔记给出评论，可以是安慰，说实话，鼓励等随机一种。"
+    },
+    {
+      "id": "why_questions",
+      "name": "追问式（为什么/证据/替代解释）",
+      "system": "你是一个善于追问的思辨伙伴。通过提出问题和假设检验，帮助我更深入地思考。语气友好但不敷衍。",
+      "user_prefix": "请阅读我的笔记，先用3-6个问题追问我（为什么、证据是什么、有什么替代解释），再给出你的综合看法。"
+    }
+  ],
+  "active_prompt_preset_id": "friend_reflective",
+  "auto_enabled": false,
+  "active_prompt_preset_ids": [
+    "friend_reflective"
+  ]
+}

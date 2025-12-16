@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} · {{ t("我的心得") }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-xl-9">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+          <div>
+            <h3 class="mb-2">{{ post.title }}</h3>
+            <div class="d-flex flex-wrap align-items-center gap-2 text-muted small">
+              {% if category %}
+                <span class="badge rounded-pill" style="background: {{ category.color }};">{{ category.name }}</span>
+              {% else %}
+                <span class="badge text-bg-secondary rounded-pill">{{ t("未分类") }}</span>
+              {% endif %}
+              <span>{{ t("发表：") }}{{ post.published_at[:19].replace("T"," ") }}</span>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" href="{{ url_for('edit_post', post_id=post.id) }}">{{ t("编辑") }}</a>
+            <form method="post" action="{{ url_for('delete_post', post_id=post.id) }}" onsubmit="return confirm('{{ t("确定删除这篇文章吗？") }}');">
+              <button class="btn btn-outline-danger" type="submit">{{ t("删除") }}</button>
+            </form>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <article class="content-prewrap">{{ post.content }}</article>
+
+        <hr class="my-4">
+
+        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+          <a class="btn btn-outline-secondary" href="{{ url_for('index') }}">{{ t("返回列表") }}</a>
+
+          <div class="d-flex gap-2 align-items-center">
+            <form class="d-flex gap-2 js-llm-run" method="post" action="{{ url_for('llm_run_now_for_post_fallback', post_id=post.id) }}" data-endpoint="{{ url_for('api_llm_run_now_for_post', post_id=post.id) }}">
+              <select class="form-select form-select-sm" name="model" style="max-width: 260px;" required>
+                <option value="" selected disabled>{{ t("选择模型立即评论") }}</option>
+                <option value="random">{{ t("🎲 随机模型") }}</option>
+                {% for m in models %}
+                  <option value="{{ m }}">{{ m }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-sm btn-primary" type="button" data-action="run">{{ t("立即评论") }}</button>
+            </form>
+
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('llm_settings') }}">{{ t("LLM 设置") }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mt-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">{{ t("评论") }}</h5>
+          <span class="text-muted small">{{ comments|length }} {{ t('条') }}</span>
+        </div>
+
+        {% if comments|length == 0 %}
+          <div class="empty-state mt-3">
+            <div class="display-6">💬</div>
+            <div class="mt-2">{{ t("还没有评论。") }}</div>
+            <div class="text-muted">{{ t("你可以点上面的“立即评论”，或者在「LLM 评论设置」里定时自动生成。") }}</div>
+          </div>
+        {% else %}
+          <div class="mt-3 vstack gap-3">
+            {% for c in comments %}
+              <div class="comment-item p-3 rounded-4 border" id="c-{{ c.id }}">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge text-bg-dark">{{ c.model }}</span>
+                    <span class="text-muted small">{{ c.created_at[:19].replace("T"," ") }}</span>
+                  </div>
+                </div>
+                <div class="mt-2 content-prewrap">{{ c.content }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

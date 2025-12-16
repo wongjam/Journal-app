@@ -1,0 +1,29 @@
+【数据文件说明】
+1) categories.json
+   - 分类列表：id / name / color
+
+2) posts.json
+   - 文章主数据（你要求的字段）：id / title / category / content / published_at
+
+3) post_meta.json
+   - 文章辅助元数据（为了“编辑后允许所有模型再追加评论”）：
+     - edit_seq：编辑次数
+     - updated_at：最后编辑时间
+     - content_hash：正文哈希（辅助判定变化）
+
+4) llm_config.json
+   - LLM（Ollama）配置：
+     - auto_enabled：是否开启“自动评论”（后台定时）
+     - server / port：Ollama 地址
+     - allowed_models：允许使用的模型列表（空=允许全部）
+     - default_interval_minutes / interval_minutes_by_model：频率
+     - max_comments_per_post_default / max_comments_per_post_by_model：每篇每模型上限（按 edit_seq 计算）
+     - random_pick_mode：自动挑选文章策略
+     - prompt_presets / active_prompt_preset_id：提示词预设
+
+5) comments.json
+   - 评论列表：
+     - id / post_id / post_edit_seq / model / content / created_at / read
+     - read=false 会进入“新评论”列表
+6）ollama_timeout.log
+   - ollama模型生成信息的超时记录

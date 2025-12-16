@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "life",
+      "name": "生活感想",
+      "color": "#198754"
+    },
+    {
+      "id": "diary",
+      "name": "碎片日记",
+      "color": "#6F7F6A"
+    },
+    {
+      "id": "past",
+      "name": "过往总结",
+      "color": "#0d6efd"
+    },
+    {
+      "id": "build",
+      "name": "自我建设",
+      "color": "#BF4F37"
+    },
+    {
+      "id": "ittech",
+      "name": "技术文档",
+      "color": "#6E3CB9"
+    },
+    {
+      "id": "experience",
+      "name": "经验总结",
+      "color": "#98CB2A"
+    }
+  ]
+}

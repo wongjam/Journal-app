@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ t("分类管理") }} · {{ t("我的心得") }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-12 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">{{ t("新建分类") }}</h5>
+        <form class="mt-3" method="post" action="{{ url_for('create_category') }}">
+          <div class="mb-3">
+            <label class="form-label">{{ t("分类名称") }}</label>
+            <input class="form-control" name="name" placeholder="{{ t('例如：读书笔记') }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ t("分类ID/英文代号（可选）") }}</label>
+            <input class="form-control" name="id" placeholder="{{ t('例如：reading-notes（不填会自动生成）') }}">
+            <div class="form-text">{{ t("用于URL与内部存储；建议只用字母数字、_、-。") }}</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ t("颜色") }}</label>
+            <div class="input-group">
+              <span class="input-group-text">#</span>
+              <input class="form-control" name="color" value="#0d6efd" placeholder="{{ t('#RRGGBB 或 #RGB') }}">
+            </div>
+          </div>
+          <div class="d-grid">
+            <button class="btn btn-primary" type="submit">{{ t("添加") }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">{{ t("现有分类") }}</h5>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('index') }}">{{ t("回文章列表") }}</a>
+        </div>
+
+        <div class="mt-3">
+          {% if categories|length == 0 %}
+            <div class="empty-state">
+              <div class="display-6">🏷️</div>
+              <div class="mt-2">{{ t("还没有分类。") }}</div>
+            </div>
+          {% else %}
+            <div class="list-group">
+              {% for c in categories %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge rounded-pill" style="background: {{ c.color }};">{{ c.name }}</span>
+                    <span class="text-muted small">ID：{{ c.id }}</span>
+                    <span class="text-muted small">{{ t("颜色：") }}{{ c.color }}</span>
+                  </div>
+                  <form method="post" action="{{ url_for('delete_category', cat_id=c.id) }}" onsubmit="return confirm('{{ t("确定删除分类吗？（必须该分类下没有文章）") }}');">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">{{ t("删除") }}</button>
+                  </form>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
